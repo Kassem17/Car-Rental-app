@@ -229,3 +229,55 @@ export const getBookingByCarId = async (req, res) => {
     res.status(500).json({ message: "Error in update Booking", error });
   }
 };
+
+export const getBookingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Booking id is required" });
+    }
+
+    const booking = await Booking.findById(id)
+      .populate("car")
+      .populate("user")
+      .select("-password");
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
+    }
+
+    return res.status(200).json({ success: true, booking });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error fetching booking", error });
+  }
+};
+
+
+export const updateBookingStatus = async (req, res) => {
+  const { bookingId } = req.params;
+  const { status } = req.body; // Status is passed in the request body
+
+  try {
+    const booking = await Booking.findById(bookingId);
+    
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Update the status of the booking
+    booking.status = status;
+    await booking.save();
+
+    return res.status(200).json(booking); // Send back the updated booking
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to update booking status" });
+  }
+};

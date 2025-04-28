@@ -20,8 +20,7 @@ export const AppContextProvider = ({ children }) => {
   const [dashboardBookings, setDashboardBookings] = useState([]);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  // const StripePublishableKey = import.meta.env.VITE_Stripe_Publishable_key;
-  // const SecretKey = import.meta.env.VITE_Secret_key;
+
 
   const value = {
     token,

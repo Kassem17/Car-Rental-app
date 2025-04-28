@@ -4,6 +4,8 @@ import {
   findUserById,
   getAllBookings,
   getAllUsers,
+  markBookingAsPaid,
+  payCash,
   updateProfile,
 } from "../controllers/adminController.js";
 
@@ -15,5 +17,7 @@ adminRouter.get("/get-bookings", protectRoute, getAllBookings);
 adminRouter.get("/get-user", protectRoute, findUserById);
 
 adminRouter.post("/update-profile", protectRoute, updateProfile);
+adminRouter.post("/pay-cash", payCash);
+adminRouter.post("/mark-booking-as-paid", markBookingAsPaid);
 
 export default adminRouter;

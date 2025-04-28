@@ -3,16 +3,14 @@ import { AppContext } from "../../context/AppContext";
 import useGetUserById from "../../hooks/useGetUserById";
 import useGetBookingForUser from "../../hooks/useGetBookingForUser";
 import useCancelBookingById from "../../hooks/useCancelBooking";
-// import { loadStripe } from "@stripe/stripe-js";
-// import axios from "axios";
-
-// const stripePromise = loadStripe(import.meta.env.VITE_Stripe_Publishable_key);
+import { useNavigate } from "react-router-dom";
 
 const MyBookings = () => {
   const { userById, bookingForUser, token } = useContext(AppContext);
   const { getUserById } = useGetUserById();
   const { getBookingByUser } = useGetBookingForUser();
   const { cancelBooking } = useCancelBookingById();
+  const navigate = useNavigate();
 
   useEffect(() => {
     getUserById(token);
@@ -22,29 +20,6 @@ const MyBookings = () => {
   const handleCancelBooking = async (id) => {
     await cancelBooking({ bookingId: id });
   };
-
-  // const handleStripePayment = async (booking) => {
-  //   try {
-  //     const stripe = await stripePromise;
-
-  //     const response = await axios.post(
-  //       backendUrl + "/stripe/create-checkout-session",
-  //       {
-  //         bookingId: booking._id,
-  //         amount: booking.totalAmount,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     window.location.href = response.data.url;
-  //   } catch (error) {
-  //     console.error("Stripe Checkout error:", error);
-  //   }
-  // };
 
   // Sorting bookings: pending > completed > cancelled
   const sortedBookings = [...bookingForUser].sort((a, b) => {
@@ -149,19 +124,33 @@ const MyBookings = () => {
 
                   <div className="bg-gray-50 px-6 py-3 flex justify-end">
                     {/* pay button */}
-                    <button
-                      // onClick={() => handleStripePayment(booking)}
-                      className={`font-medium text-sm ${
-                        booking.status === "completed"
-                          ? " cursor-not-allowed text-green-600"
-                          : "text-indigo-600 hover:text-indigo-800"
-                      }`}
-                      disabled={booking.status === "completed"}
-                    >
-                      {booking.status === "completed" && !isCancelled
-                        ? "Paid"
-                        : `Pay Online $${booking.totalAmount}`}
-                    </button>
+                    {!isCancelled && (
+                      <button
+                        
+                        onClick={() => console.log("Pay online")}
+                        className={`font-medium text-sm ${
+                          booking.status === "completed" && !isCancelled
+                            ? " cursor-not-allowed text-green-600"
+                            : "text-indigo-600 hover:text-indigo-800"
+                        }`}
+                        disabled={booking.status === "completed"}
+                      >
+                        {booking.status === "completed" && !isCancelled
+                          ? "Paid"
+                          : `Pay Online $${booking.totalAmount}`}
+                      </button>
+                    )}
+
+                    {booking.status === "completed" && !isCancelled && (
+                      <button
+                        onClick={() =>
+                          navigate(`/print-voucher/${booking._id}`)
+                        }
+                        className="ml-4 font-medium text-sm text-indigo-600 hover:text-indigo-800"
+                      >
+                        print Voucher
+                      </button>
+                    )}
 
                     {/* cancel button */}
                     {booking.status !== "completed" && (

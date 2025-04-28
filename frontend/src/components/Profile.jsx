@@ -162,7 +162,7 @@ const Profile = () => {
                 <div>
                   <p className="text-sm text-gray-500">Rentals</p>
                   <p className="text-2xl font-bold text-indigo-600">
-                    {userById?.bookings?.length}
+                    {userById?.bookings.length}
                   </p>
                 </div>
                 <div>

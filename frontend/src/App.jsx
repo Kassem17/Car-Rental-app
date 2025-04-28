@@ -20,6 +20,7 @@ import UseGetBookingsForDashboard from "./pages/adminPages/hooks/UseGetBookingsF
 import AllUsers from "./pages/adminPages/AllUsers";
 import AllCars from "./pages/adminPages/AllCars";
 import Profile from "./components/Profile";
+import Voucher from "./components/Voucher";
 
 const App = () => {
   const { token, userById } = useContext(AppContext);
@@ -200,6 +201,15 @@ const App = () => {
                 path="/profile"
                 element={
                   <Profile className="bg-white rounded-xl shadow-md p-6" />
+                }
+              />
+            )}
+
+            {token && (
+              <Route
+                path="/print-voucher/:id"
+                element={
+                  <Voucher className="bg-white rounded-xl shadow-md p-6" />
                 }
               />
             )}

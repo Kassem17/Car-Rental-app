@@ -25,10 +25,6 @@ const carSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    // carImage: {
-    //   data: Buffer,
-    //   contentType: String,
-    // },
     carImage: {
       type: String,
       required: true,

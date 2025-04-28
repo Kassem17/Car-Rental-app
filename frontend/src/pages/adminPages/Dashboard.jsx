@@ -14,9 +14,12 @@ import {
 import { AppContext } from "../../context/AppContext";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 const Dashboard = () => {
-  const { users, dashboardCars, dashboardBookings } = useContext(AppContext);
+  const { users, dashboardCars, dashboardBookings, backendUrl } =
+    useContext(AppContext);
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -89,6 +92,21 @@ const Dashboard = () => {
   const handleAction = (bookingId, action) => {
     console.log(`${action} booking ${bookingId}`);
     // Integrate with API here
+  };
+
+  const handlePayCash = async (bookingId) => {
+    try {
+      const { data } = await axios.post(backendUrl + "/api/admin/pay-cash", {
+        bookingId,
+      });
+      if (data.success) {
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const bookingStatusData = [
@@ -309,12 +327,10 @@ const Dashboard = () => {
                         {booking.status === "pending" && (
                           <>
                             <button
-                              onClick={() =>
-                                handleAction(booking._id, "confirm")
-                              }
+                              onClick={() => handlePayCash(booking._id)}
                               className="text-green-600 hover:text-green-800"
                             >
-                              Confirm
+                              Pay Cash
                             </button>
                             <button
                               onClick={() =>
