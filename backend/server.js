@@ -26,18 +26,14 @@ connectToMongoDB();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
   })
 );
 
 // Cron Job
 startBookingAutoCancelJob();
 
-// ES Module workaround for __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// API Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/car", carRouter);
@@ -47,23 +43,9 @@ app.post("/api/payment/create-checkout-session", createCheckoutSession);
 app.post("/api/payment/verify-payment", verifyPayment);
 app.use("/webhook", webhookRoutes); // webhook must use raw body
 
-// Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, "frontend/build")));
-
 // Root route
 app.get("/", (req, res) => {
   res.send("API is running");
-});
-
-// Catch-all to serve index.html for React Router (except for API or webhook paths)
-app.get("*", (req, res) => {
-  if (
-    req.originalUrl.startsWith("/api") ||
-    req.originalUrl.startsWith("/webhook")
-  ) {
-    return res.status(404).json({ message: "API route not found" });
-  }
-  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
 // Start server
