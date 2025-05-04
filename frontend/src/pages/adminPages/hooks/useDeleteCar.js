@@ -10,7 +10,7 @@ const useDeleteCar = () => {
   const deleteCar = async (id) => {
     try {
       setLoading(true);
-      const { data } = await axios.post(
+      const { data } = await axios.delete(
         backendUrl + `/api/car/delete-car`,
         { carId: id },
         {
