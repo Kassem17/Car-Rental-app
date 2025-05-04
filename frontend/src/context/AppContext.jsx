@@ -48,7 +48,7 @@ export const AppContextProvider = ({ children }) => {
     fetchReviews();
   }, []);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = "https://car-rental-app-backend-ayq3.onrender.com";
 
   const [unavailableCar, setUnavailableCar] = useState([]);
 
