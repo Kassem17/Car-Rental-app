@@ -4,7 +4,7 @@ import { useLocation, Link } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 
 const PaymentSuccess = () => {
-  const { search } = useLocation();
+  const { search, backendUrl } = useLocation();
   const queryParams = new URLSearchParams(search);
   const sessionId = queryParams.get("session_id");
 
@@ -12,7 +12,7 @@ const PaymentSuccess = () => {
     const verifyPayment = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/payment/verify-payment",
+          backendUrl + "/api/payment/verify-payment",
           {
             sessionId,
           }

@@ -6,13 +6,12 @@ import { AppContext } from "../../context/AppContext";
 import useGetAllCars from "../../hooks/useGetAllCars";
 import {
   ArrowRightIcon,
-  BoltIcon,
-  CarIcon,
-  CogIcon,
-  HeartIcon,
-  SparklesIcon,
+  SparklesIcon, // For "All" filter
+  BoltIcon, // For electric
+  FlameIcon, // For gas/petrol (using Flame as substitute for Fuel)
+  CarIcon, // General car icon
+  GaugeIcon, // Using as substitute for Diesel
 } from "lucide-react";
-import { FaBoltLightning } from "react-icons/fa6";
 import Tilt from "react-parallax-tilt";
 
 const container = {
@@ -28,31 +27,50 @@ const container = {
 const AllCarsList = () => {
   const { getAllCars, loading } = useGetAllCars();
   const { allCars } = useContext(AppContext);
-  const [activeFilter, setActiveFilter] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("all");
   const [displayedCars, setDisplayedCars] = useState(allCars);
   const navigate = useNavigate();
-  // Get unique fuel types from allCars data
-  const fuelTypes = [...new Set(allCars.map((car) => car.fuelType))];
+
+  // Get unique fuel types and add 'all' and 'latest' options
+  const fuelTypes = ["Petrol", "Diesel", "Hybrid", "Electric"];
+  const filterOptions = ["all", ...fuelTypes];
+
+  // Icon mapping for each filter type
+  const getFilterIcon = (filterType) => {
+    switch (filterType) {
+      case "all":
+        return <SparklesIcon className="w-4 h-4" />;
+      case "Electric":
+        return <BoltIcon className="w-4 h-4" />;
+      case "Petrol":
+        return <FlameIcon className="w-4 h-4" />;
+      case "Diesel":
+        return <GaugeIcon className="w-4 h-4" />;
+      case "Hybrid":
+        return <CarIcon className="w-4 h-4" />;
+      default:
+        return <CarIcon className="w-4 h-4" />;
+    }
+  };
 
   const handleSort = (type) => {
-    // If clicking the already active filter, reset
-    if (activeFilter === type) {
+    setActiveFilter(type);
+
+    if (type === "all") {
       setDisplayedCars(allCars);
-      setActiveFilter(null);
       return;
     }
 
-    let sortedCars = [...allCars];
+ 
 
-    if (type === "latest") {
-      sortedCars.sort((a, b) => b.year - a.year);
-    } else if (fuelTypes.includes(type)) {
-      sortedCars = sortedCars.filter((car) => car.fuelType === type);
-    }
-
-    setDisplayedCars(sortedCars);
-    setActiveFilter(type);
+    // Filter by fuel type
+    const filteredCars = allCars.filter((car) => car.fuelType === type);
+    setDisplayedCars(filteredCars);
   };
+
+  useEffect(() => {
+    setDisplayedCars(allCars);
+  }, [allCars]);
 
   useEffect(() => {
     getAllCars();
@@ -68,70 +86,17 @@ const AllCarsList = () => {
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white py-16 px-4 md:px-10 relative overflow-hidden">
-      {/* Optional Background Particles */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="20" cy="50" r="2" fill="#cbd5e1" opacity="0.3">
-            <animate
-              attributeName="cy"
-              values="0;100;0"
-              dur="10s"
-              repeatCount="indefinite"
-            />
-          </circle>
-          <circle cx="80" cy="150" r="3" fill="#e0f2fe" opacity="0.4">
-            <animate
-              attributeName="cy"
-              values="100;0;100"
-              dur="12s"
-              repeatCount="indefinite"
-            />
-          </circle>
-        </svg>
-      </div>
-
-      {/* Decorative blobs */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-0 w-40 h-40 bg-blue-100 rounded-full filter blur-[80px] opacity-20"></div>
-        <div className="absolute bottom-0 right-0 w-60 h-60 bg-indigo-100 rounded-full filter blur-[100px] opacity-20"></div>
-      </div>
-
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16 relative">
-          <div className="inline-block relative">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 relative z-10"
-            >
-              Discover Your{" "}
-              <span className="relative bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-textShimmer">
-                Dream Car
-              </span>
-            </motion.h2>
-            <div className="absolute -top-4 -right-6 w-12 h-12 bg-yellow-100 rounded-full z-0"></div>
-          </div>
+          <motion.h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Discover Your{" "}
+            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-textShimmer">
+              Dream Car
+            </span>
+          </motion.h2>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-lg text-gray-600 max-w-2xl mx-auto mt-6 relative inline-block"
-          >
+          <motion.p className="text-lg text-gray-600 max-w-2xl mx-auto mt-6">
             Browse our curated collection of premium vehicles
-            <svg
-              className="w-32 h-6 absolute -bottom-3 -right-8 text-blue-200"
-              viewBox="0 0 130 20"
-            >
-              <path
-                d="M0 10 C30 18, 80 2, 130 10"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5,3"
-              />
-            </svg>
           </motion.p>
 
           <motion.div
@@ -140,99 +105,93 @@ const AllCarsList = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            {["All", ...fuelTypes, "Latest"].map((filter) => (
+            {filterOptions.map((filter) => (
               <motion.button
                 key={filter}
-                onClick={() => handleSort(filter.toLowerCase())}
+                onClick={() => handleSort(filter)}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 shadow-inner hover:shadow-md ${
-                  activeFilter === filter.toLowerCase()
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  activeFilter === filter
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {filter === "All" && <CarIcon className="w-4 h-4" />}
-                {filter === "Electric" && (
-                  <BoltIcon className="w-4 h-4 text-green-500" />
-                )}
-                {filter === "Gasoline" && (
-                  <FuelPumpIcon className="w-4 h-4 text-orange-500" />
-                )}
-                {filter === "Diesel" && (
-                  <CogIcon className="w-4 h-4 text-gray-500" />
-                )}
-                {filter === "Hybrid" && (
-                  <FaBoltLightning className="w-4 h-4 text-blue-400" />
-                )}
-                {filter === "Latest" && (
-                  <SparklesIcon className="w-4 h-4 text-yellow-400" />
-                )}
-                {filter}
+                {getFilterIcon(filter)}
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </motion.button>
             ))}
           </motion.div>
         </div>
 
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-        >
-          {displayedCars.map((car, index) => (
-            <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} key={index}>
-              <motion.div
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  visible: { y: 0, opacity: 1 },
-                }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-lg border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300"
+        {displayedCars.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-gray-500 mb-4">
+              {activeFilter === "all"
+                ? "No cars available at the moment."
+                : `No ${activeFilter} cars found.`}
+            </p>
+            {activeFilter !== "all" && (
+              <button
+                onClick={() => handleSort("all")}
+                className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
               >
-           
-                <CarCard car={car} />
+                <SparklesIcon className="w-4 h-4" />
+                Show All Cars
+              </button>
+            )}
+          </div>
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          >
+            {displayedCars.map((car) => (
+              <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} key={car._id}>
+                <motion.div
+                  variants={{
+                    hidden: { y: 20, opacity: 0 },
+                    visible: { y: 0, opacity: 1 },
+                  }}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-lg border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300"
+                >
+                  <CarCard car={car} />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5">
-                  <div className="flex justify-between items-start">
-                    {/* <button className="p-2 bg-white/90 rounded-full hover:bg-white transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <HeartIcon className="w-5 h-5 text-gray-400 hover:text-red-500" />
-                    </button> */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5">
                     {car.discount && (
-                      <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
                         {car.discount}% OFF
                       </div>
                     )}
+
+                    <button
+                      disabled={!car.available}
+                      onClick={() => navigate(`/car-details/${car._id}`)}
+                      className={`w-full py-3 rounded-lg font-medium transform translate-y-5 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2 ${
+                        car.available
+                          ? "bg-white text-blue-600 hover:bg-blue-50"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      {car.available ? (
+                        <>
+                          View Details
+                          <ArrowRightIcon className="w-4 h-4" />
+                        </>
+                      ) : (
+                        "Unavailable"
+                      )}
+                    </button>
                   </div>
-
-                  <button
-                    disabled={!car.available}
-                    onClick={() => navigate("/car-details/" + car._id)}
-                    className={`w-full py-3 rounded-lg font-medium transform translate-y-5 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2 ${
-                      car.available
-                        ? "bg-white text-blue-600 hover:bg-blue-50"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {car.available ? (
-                      <>
-                        View Details
-                        <ArrowRightIcon className="w-4 h-4" />
-                      </>
-                    ) : (
-                      "Unavailable"
-                    )}
-                  </button>
-                </div>
-              </motion.div>
-            </Tilt>
-          ))}
-        </motion.div>
-
-        <div className="mt-16 text-center relative">
-          <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-        </div>
+                </motion.div>
+              </Tilt>
+            ))}
+          </motion.div>
+        )}
       </div>
     </div>
   );

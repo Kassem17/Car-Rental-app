@@ -271,7 +271,7 @@ const MyBookings = () => {
       </div>
       <div className="text-center mt-20">
         <motion.button
-          onClick={() => navigate("/all-Cars")}
+          onClick={() => navigate("/all-cars")}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           className="relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-full shadow-lg transition-all group"

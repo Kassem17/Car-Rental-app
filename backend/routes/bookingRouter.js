@@ -27,7 +27,9 @@ bookingRouter.post("/update-booking/:id", protectRoute, updateBooking);
 
 bookingRouter.post("/get-multiple", getMultipleBooking);
 
-bookingRouter.patch("/:bookingId", updateBookingStatus);
+// bookingRouter.patch("/:bookingId", updateBookingStatus);
+bookingRouter.patch("/update-booking/:bookingId", updateBookingStatus);  // ✅
+
 
 bookingRouter.delete("/delete-booking/:bookingId", deleteCancelledBooking);
 
