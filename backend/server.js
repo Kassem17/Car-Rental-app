@@ -24,7 +24,7 @@ connectToMongoDB();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://car-rental-app-iq0w.onrender.com",
   })
 );
 
