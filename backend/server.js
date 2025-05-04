@@ -25,11 +25,7 @@ app.use(express.json());
 connectToMongoDB();
 
 // Setup CORS
-app.use(
-  cors({
-    origin: "https://car-rental-app-iq0w.onrender.com", // your frontend domain
-  })
-);
+app.use(cors());
 
 // Cron Job
 startBookingAutoCancelJob();
