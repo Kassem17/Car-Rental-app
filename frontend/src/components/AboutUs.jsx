@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
 const AboutUs = () => {
+  const { allCars, locations } = useContext(AppContext);
+
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8  ">
       <div className="max-w-7xl mx-auto">
@@ -70,8 +74,8 @@ const AboutUs = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
               {[
                 { value: "10K+", label: "Happy Customers" },
-                { value: "500+", label: "Vehicles" },
-                { value: "25+", label: "Cities" },
+                { value: `${allCars.length}+`, label: "Vehicles" },
+                { value: `${locations.length}+`, label: "Cities" },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}

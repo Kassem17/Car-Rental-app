@@ -1,10 +1,11 @@
 import express from "express";
 import protectRoute from "../middleware/protectRoute.js";
 import {
+  cancelBooking,
+  confirmBooking,
   findUserById,
   getAllBookings,
   getAllUsers,
-  markBookingAsPaid,
   payCash,
   updateProfile,
 } from "../controllers/adminController.js";
@@ -18,6 +19,9 @@ adminRouter.get("/get-user", protectRoute, findUserById);
 
 adminRouter.post("/update-profile", protectRoute, updateProfile);
 adminRouter.post("/pay-cash", payCash);
-adminRouter.post("/mark-booking-as-paid", markBookingAsPaid);
+
+adminRouter.post("/confirm-booking", confirmBooking);
+
+adminRouter.post("/admin-cancel", cancelBooking);
 
 export default adminRouter;

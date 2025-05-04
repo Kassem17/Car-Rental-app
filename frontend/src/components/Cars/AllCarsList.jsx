@@ -191,19 +191,14 @@ const AllCarsList = () => {
                 transition={{ type: "spring", stiffness: 300 }}
                 className="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-lg border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300"
               >
-                {!car.available && (
-                  <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
-                    Booked
-                  </div>
-                )}
-
+           
                 <CarCard car={car} />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5">
                   <div className="flex justify-between items-start">
-                    <button className="p-2 bg-white/90 rounded-full hover:bg-white transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    {/* <button className="p-2 bg-white/90 rounded-full hover:bg-white transition-all transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                       <HeartIcon className="w-5 h-5 text-gray-400 hover:text-red-500" />
-                    </button>
+                    </button> */}
                     {car.discount && (
                       <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         {car.discount}% OFF

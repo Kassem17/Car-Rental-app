@@ -182,9 +182,9 @@ const CarList = () => {
               <CarCard car={car} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5">
                 <div className="flex justify-end">
-                  <button className="bg-white/80 rounded-full p-2 hover:bg-white">
+                  {/* <button className="bg-white/80 rounded-full p-2 hover:bg-white">
                     <HeartIcon className="w-5 h-5 text-gray-500 group-hover:text-red-500 transition-colors" />
-                  </button>
+                  </button> */}
                 </div>
                 <button
                   onClick={() => navigate(`/car-details/${car._id}`)}

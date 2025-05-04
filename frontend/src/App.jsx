@@ -1,4 +1,4 @@
-import React, { use, useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Login from "./pages/login/Login";
 import SignUp from "./pages/signUp/SignUp";
@@ -21,6 +21,11 @@ import AllUsers from "./pages/adminPages/AllUsers";
 import AllCars from "./pages/adminPages/AllCars";
 import Profile from "./components/Profile";
 import Voucher from "./components/Voucher";
+import PaymentCancelled from "./pages/PaymentPages/PaymentCancelled";
+import PaymentSuccess from "./pages/PaymentPages/PaymentSuccess"; // ✅ Import added
+import NotFound from "./pages/NotFound/NotFound";
+import ForgotPassword from "./pages/PasswordPages/ForgetPassword";
+import ResetPassword from "./pages/PasswordPages/ResetPassword";
 
 const App = () => {
   const { token, userById } = useContext(AppContext);
@@ -37,19 +42,21 @@ const App = () => {
       getCarsForDashboard();
       getBookings();
     }
-  }, []);
+  }, [token]);
 
-  // Protected Route Wrapper (only used for /add-cars)
-  const ProtectedRoute = ({ children }) => {
+  // Updated ProtectedRoute for admin-only access
+  const ProtectedRoute = ({ children, role }) => {
     if (!token) {
       return <Navigate to="/login" replace />;
+    }
+    if (role && userById?.role !== role) {
+      return <Navigate to="/" replace />;
     }
     return children;
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-200">
-      {/* Animated Navbar with subtle shadow */}
       <header className="shrink-0 sticky top-0 z-50">
         <ToastContainer
           position="top-center"
@@ -66,25 +73,26 @@ const App = () => {
         <Navbar className="bg-white/90 text-black backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-300" />
       </header>
 
-      {/* Main content with subtle animation on load */}
       <main className="flex-grow px-4 sm:px-6 lg:px-8 py-6 transition-all duration-500 animate-fadeIn">
         <div className="max-w-7xl mx-auto">
           <Routes>
-            {/* Home - Always accessible */}
             <Route
               path="/"
               element={
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Home />
-                </motion.div>
+                token && userById?.role === "admin" ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Home />
+                  </motion.div>
+                )
               }
             />
 
-            {/* Login - Redirect to home if already logged in */}
             <Route
               path="/login"
               element={
@@ -98,7 +106,6 @@ const App = () => {
               }
             />
 
-            {/* Signup - Redirect to home if already logged in */}
             <Route
               path="/signup"
               element={
@@ -112,11 +119,11 @@ const App = () => {
               }
             />
 
-            {/* Only protect the add-cars route */}
+            {/* Only admin can access /add-cars */}
             <Route
               path="/add-cars"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute role="admin">
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -128,10 +135,11 @@ const App = () => {
               }
             />
 
+            {/* Only admin can access /dashboard */}
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute role="admin">
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -143,7 +151,6 @@ const App = () => {
               }
             />
 
-            {/* All other routes are publicly accessible */}
             <Route
               path="/all-cars"
               element={
@@ -169,7 +176,9 @@ const App = () => {
                 </motion.div>
               }
             />
-            {token && userById.role === "customer" && (
+
+            {/* Additional routes for customers and admins */}
+            {token && userById?.role === "customer" && (
               <Route
                 path="/my-bookings"
                 element={
@@ -178,50 +187,53 @@ const App = () => {
               />
             )}
 
-            {token && userById.role === "admin" && (
-              <Route
-                path="/all-users"
-                element={
-                  <AllUsers className="bg-white rounded-xl shadow-md p-6" />
-                }
-              />
-            )}
-
-            {token && userById.role === "admin" && (
-              <Route
-                path="/cars"
-                element={
-                  <AllCars className="bg-white rounded-xl shadow-md p-6" />
-                }
-              />
-            )}
-
-            {token && (
-              <Route
-                path="/profile"
-                element={
-                  <Profile className="bg-white rounded-xl shadow-md p-6" />
-                }
-              />
+            {token && userById?.role === "admin" && (
+              <>
+                <Route
+                  path="/all-users"
+                  element={
+                    <AllUsers className="bg-white rounded-xl shadow-md p-6" />
+                  }
+                />
+                <Route
+                  path="/cars"
+                  element={
+                    <AllCars className="bg-white rounded-xl shadow-md p-6" />
+                  }
+                />
+              </>
             )}
 
             {token && (
-              <Route
-                path="/print-voucher/:id"
-                element={
-                  <Voucher className="bg-white rounded-xl shadow-md p-6" />
-                }
-              />
+              <>
+                <Route
+                  path="/profile"
+                  element={
+                    <Profile className="bg-white rounded-xl shadow-md p-6" />
+                  }
+                />
+                <Route
+                  path="/print-voucher/:id"
+                  element={
+                    <Voucher className="bg-white rounded-xl shadow-md p-6" />
+                  }
+                />
+              </>
             )}
 
-            {/* Catch-all route - Redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-            {/* <Route path="/success" element={<Success />} /> */}
+            {/* Payment Routes */}
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancel" element={<PaymentCancelled />} />
+            {/* Password Routes */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </main>
 
-      {/* Sticky footer - Don't show on auth pages */}
       {!["/login", "/signup"].includes(location.pathname) && (
         <footer className="shrink-0 text-white py-8 mt-16 bg-gradient-to-b from-blue-200 via-green-200 to-blue-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

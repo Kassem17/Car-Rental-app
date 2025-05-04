@@ -1,5 +1,8 @@
 import User from "../models/User.js";
 import Booking from "../models/Booking.js";
+import Car from "../models/Car.js";
+
+import mongoose from "mongoose";
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -20,24 +23,6 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// export const getAllBookings = async (req, res) => {
-//   try {
-//     const { userId } = req.user;
-
-//     if (!userId) {
-//       return res.status(401).json({ message: "Unauthorized" });
-//     }
-
-//     // Find all bookings and populate the car and user fields, including carImage
-//     const bookings = await Booking.find({}).populate("user").populate("car");
-
-//     res.status(200).json({ success: true, bookings });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Error in getting bookings", error });
-//   }
-// };
-
 export const getAllBookings = async (req, res) => {
   try {
     if (!req.user) {
@@ -51,7 +36,7 @@ export const getAllBookings = async (req, res) => {
       })
       .populate({
         path: "car",
-        select: "name model carImage", // populate only needed fields
+        select: "brand model carImage", // populate only needed fields
       });
 
     res.status(200).json({ success: true, bookings });
@@ -155,7 +140,7 @@ export const payCash = async (req, res) => {
 
     booking.isPaid = true;
     booking.paymentId = booking._id;
-    booking.status = "completed"; // Assigning the correct value here
+    booking.status = "paid";
     await booking.save();
 
     res.status(200).json({
@@ -171,35 +156,88 @@ export const payCash = async (req, res) => {
   }
 };
 
-export const markBookingAsPaid = async (req, res) => {
+export const confirmBooking = async (req, res) => {
   try {
-    const { bookingId, paymentIntentId } = req.body;
-
-    if (!bookingId || !paymentIntentId) {
-      return res.status(400).json({ error: "Booking ID and Payment Intent ID are required" });
-    }
-
-    // Find the booking by ID
+    const { bookingId } = req.body;
     const booking = await Booking.findById(bookingId);
 
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(400).json({
+        success: false,
+        message: "booking not found",
+      });
     }
 
-    // Check if the paymentIntentId matches the booking
-    if (paymentIntentId !== booking.paymentIntentId) {
-      return res.status(400).json({ error: "Invalid payment intent ID" });
-    }
-
-    // Update booking status to 'completed'
-    booking.status = "completed";
-    booking.paymentStatus = "paid";
+    booking.status = "confirmed";
     await booking.save();
 
-    // Respond with the updated booking
-    res.status(200).json({ message: "Booking marked as paid", booking });
+    res.status(200).json({
+      success: true,
+      message: "Booking Confirmed",
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error confirm Booking", error });
+  }
+};
+
+export const cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      status: { $ne: "cancelled" },
+    });
+
+    if (!booking) {
+      return res.json({
+        success: false,
+        message: "Booking not found or already cancelled.",
+      });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      await Booking.findByIdAndUpdate(
+        bookingId,
+        { status: "cancelled" },
+        { session }
+      );
+
+      await Car.findByIdAndUpdate(
+        booking.car,
+        { available: true, bookingId: null },
+        { session }
+      );
+
+      await User.findByIdAndUpdate(
+        booking.user,
+        { $pull: { bookings: bookingId } },
+        { session }
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.json({
+        success: true,
+        message: "Booking cancelled successfully.",
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error(error);
+      return res
+        .status(500)
+        .json({ message: "Error cancelling booking", error });
+    }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error marking booking as paid" });
+    return res.status(500).json({ message: "Error cancelling booking", error });
   }
 };

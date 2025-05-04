@@ -34,19 +34,25 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { path: "hero", name: "Home" },
-    { path: "cars", name: "Cars" },
-    { path: "services", name: "Services" },
-    { path: "about", name: "About" },
-    { path: "contact", name: "Contact" },
+    ...(userById.role !== "admin"
+      ? [
+          { path: "hero", name: "Home" },
+          { path: "cars", name: "Cars" },
+          { path: "services", name: "Services" },
+          { path: "about", name: "About" },
+          { path: "contact", name: "Contact" },
+        ]
+      : []),
+
     ...(token && userById.role === "customer"
       ? [{ path: "/my-bookings", name: "MyBookings", type: "route" }]
       : []),
+
     ...(token && userById.role === "admin"
-      ? [{ path: "/add-cars", name: "Add Cars", type: "route" }]
-      : []),
-    ...(token && userById.role === "admin"
-      ? [{ path: "/dashboard", name: "Dashboard", type: "route" }]
+      ? [
+          { path: "/add-cars", name: "Add Cars", type: "route" },
+          { path: "/dashboard", name: "Dashboard", type: "route" },
+        ]
       : []),
   ];
 
@@ -210,6 +216,13 @@ const Navbar = () => {
                     onClick={() => {
                       if (item.path === "/my-bookings") {
                         navigate("/my-bookings");
+                        setIsOpen(false);
+                      } else if (item.path === "/add-cars") {
+                        navigate("/add-cars");
+                        setIsOpen(false);
+                      } else if (item.path === "/dashboard") {
+                        navigate("/dashboard");
+                        setIsOpen(false);
                       } else {
                         handleNavigation(item.path);
                       }

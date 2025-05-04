@@ -1,9 +1,53 @@
-import React from "react";
+import React, { useContext } from "react";
 import carImage from "../../public/car.png";
 import { motion } from "framer-motion";
-import { Car,  MapPin, ShieldCheck, Star } from "lucide-react"; // icons
+import { Car, MapPin, Star, StarHalf } from "lucide-react"; // icons
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const { reviews, allCars } = useContext(AppContext);
+  // const repeatedReviews = reviews.concat(reviews); // Duplicate for smooth marquee
+
+  const highestRating = Math.max(...reviews.map((r) => r.rating));
+
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    // Full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <Star
+          key={`full-${i}`}
+          className="h-5 w-5 text-yellow-400 fill-current"
+        />
+      );
+    }
+
+    // Half star
+    if (hasHalfStar) {
+      stars.push(
+        <StarHalf key="half" className="h-5 w-5 text-yellow-400 fill-current" />
+      );
+    }
+
+    // Empty stars
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <Star
+          key={`empty-${i}`}
+          className="h-5 w-5 text-gray-300 fill-current"
+        />
+      );
+    }
+
+    return stars;
+  };
+
   return (
     <section
       id="hero"
@@ -42,29 +86,26 @@ const Hero = () => {
             </span>
           </p>
 
-          {/* <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <motion.button
+              onClick={() => navigate("/all-cars")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all"
             >
               Book Your Ride Now
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-white text-sky-600 border border-sky-200 rounded-full font-medium shadow-sm hover:shadow-md transition-all"
-            >
-              Explore Fleet
-            </motion.button>
-          </div> */}
+          </div>
 
           {/* Icons with hover effects */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { icon: <Car className="h-6 w-6" />, text: "200+ Vehicles" },
+              { icon: <Car className="h-6 w-6" />, text: `${allCars.length}+` },
               { icon: <MapPin className="h-6 w-6" />, text: "50+ Locations" },
-              { icon: <Star className="h-6 w-6" />, text: "4.9/5 Rating" },
+              {
+                icon: <Star className="h-6 w-6 text-yellow-500" />,
+                text: `${highestRating.toFixed(1)}/5 Rating`,
+              },
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -115,29 +156,22 @@ const Hero = () => {
       </div>
 
       {/* Scrolling testimonials at bottom */}
-      {/* <div className="mt-16 overflow-hidden">
+      <div className="mt-16 overflow-hidden">
         <motion.div
           className="flex whitespace-nowrap"
           animate={{ x: ["0%", "-100%"] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         >
-          {[...Array(4)].map((_, i) => (
+          {reviews.map((review, i) => (
             <div key={i} className="inline-flex items-center mx-8">
               <div className="text-lg font-medium text-gray-700 mr-4">
-                "Best service in town!"
+                {review.userName}:
               </div>
-              <div className="flex">
-                {[...Array(5)].map((_, j) => (
-                  <Star
-                    key={j}
-                    className="h-5 w-5 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
+              <div className="flex">{renderStars(review.rating)}</div>
             </div>
           ))}
         </motion.div>
-      </div> */}
+      </div>
     </section>
   );
 };

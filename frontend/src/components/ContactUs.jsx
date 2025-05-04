@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send } from "react-feather";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  ChevronDown,
+  ChevronUp,
+} from "react-feather";
+import { AppContext } from "../context/AppContext";
 
 const ContactUs = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission logic
-    console.log("Form submitted:", formData);
-  };
+  const { locations } = useContext(AppContext);
+  const [showAll, setShowAll] = useState(false);
 
   return (
     <div id="contact">
@@ -87,19 +90,46 @@ const ContactUs = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="p-3 bg-purple-100 rounded-full text-purple-600">
-                    <MapPin className="h-5 w-5" />
+                {locations.length > 0 && (
+                  <div className="space-y-4">
+                    {(showAll ? locations : locations.slice(0, 2)).map(
+                      (location) => (
+                        <div
+                          key={location.id}
+                          className="flex items-start space-x-4"
+                        >
+                          <div className="p-3 bg-purple-100 rounded-full text-purple-600">
+                            <MapPin className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-700">
+                              {location.name}
+                            </h4>
+                            <p className="text-gray-600 text-sm">
+                              Latitude: {location.latitude}
+                              <br />
+                              Longitude: {location.longitude}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+
+                    {locations.length > 2 && (
+                      <button
+                        onClick={() => setShowAll(!showAll)}
+                        className="flex items-center text-sm text-purple-600 font-medium hover:underline mt-2"
+                      >
+                        {showAll ? "Show less" : "Show more"}
+                        {showAll ? (
+                          <ChevronUp className="ml-1 w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="ml-1 w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-700">Visit Us</h4>
-                    <p className="text-gray-600">
-                      Latitude: 33.2700
-                      <br />
-                      Longitude: 36.2040
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -135,7 +165,12 @@ const ContactUs = () => {
               Send Us a Message
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              action="https://getform.io/f/bnlqoeob"
+              method="POST"
+              encType="multipart/form-data"
+              className="space-y-6"
+            >
               <div>
                 <label
                   htmlFor="name"
@@ -146,10 +181,9 @@ const ContactUs = () => {
                 <input
                   type="text"
                   id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  name="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
                   placeholder="John Doe"
                   required
@@ -166,10 +200,9 @@ const ContactUs = () => {
                 <input
                   type="email"
                   id="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  value={email}
+                  name="email"
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
                   placeholder="you@example.com"
                   required
@@ -186,10 +219,9 @@ const ContactUs = () => {
                 <textarea
                   id="message"
                   rows={5}
-                  value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
+                  value={message}
+                  name="message"
+                  onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
                   placeholder="How can we help you?"
                   required
@@ -210,22 +242,22 @@ const ContactUs = () => {
         </div>
 
         {/* Map Section */}
-        {/* <motion.div
-        className="mt-16 bg-white rounded-2xl shadow-lg overflow-hidden"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.665346763703!2d-122.4194!3d37.7749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80859a6d00690021%3A0x4a501367f076adff!2sSan%20Francisco%2C%20CA!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"
-          width="100%"
-          height="400"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          className="rounded-2xl"
-        ></iframe>
-      </motion.div> */}
+        <motion.div
+          className="mt-16 bg-white rounded-2xl shadow-lg overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3330.300248914112!2d35.4960461!3d33.8937913!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f170dcfaefc0f%3A0x6e71f75470fbbd4d!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1714440000000!5m2!1sen!2slb"
+            width="100%"
+            height="400"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            className="rounded-2xl"
+          />
+        </motion.div>
       </motion.section>
     </div>
   );

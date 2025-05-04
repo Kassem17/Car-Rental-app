@@ -1,46 +1,6 @@
 import Car from "../models/Car.js";
 import User from "../models/User.js";
 
-// export const addCar = async (req, res) => {
-//   try {
-//     const { userId } = req.user;
-//     const { brand, model, year, pricePerDay, fuelType, seats, description } =
-//       req.body;
-//     const image = req.file;
-
-//     const user = await User.findById(userId);
-
-//     if (!user || user.role !== "admin") {
-//       return res.status(403).json({ message: "Only admin can add cars" });
-//     }
-
-//     if (!image) {
-//       return res.status(400).json({ message: "Image file is required" });
-//     }
-
-//     const car = await Car.create({
-//       brand,
-//       model,
-//       year,
-//       pricePerDay,
-//       fuelType,
-//       seats,
-//       description,
-//       carImage: {
-//         data: image.buffer,
-//         contentType: image.mimetype,
-//       },
-//     });
-
-//     res
-//       .status(201)
-//       .json({ success: true, message: "Car added successfully", car });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Error in adding car", error });
-//   }
-// };
-
 export const addCar = async (req, res) => {
   try {
     const { userId } = req.user;
@@ -89,7 +49,7 @@ export const getCarById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const car = await Car.findById(id).lean();
+    const car = await Car.findById(id).populate("bookingId").lean();
 
     if (!car) {
       return res.status(404).json({ message: "Car not found" });
@@ -106,93 +66,6 @@ export const getCarById = async (req, res) => {
     res.status(500).json({ message: "Error in getting car by ID", error });
   }
 };
-
-// export const getCarById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const car = await Car.findById(id);
-
-//     if (!car) {
-//       return res.status(404).json({ message: "Car not found" });
-//     }
-
-//     let carImage = null;
-
-//     if (car.carImage && car.carImage.data) {
-//       carImage = `data:${
-//         car.carImage.contentType
-//       };base64,${car.carImage.data.toString("base64")}`;
-//     }
-
-//     const carData = {
-//       _id: car._id,
-//       brand: car.brand,
-//       model: car.model,
-//       year: car.year,
-//       pricePerDay: car.pricePerDay,
-//       fuelType: car.fuelType,
-//       seats: car.seats,
-//       description: car.description,
-//       available: car.available,
-//       carImage,
-//     };
-
-//     res.status(200).json({ success: true, car: carData });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Error in getting car by ID", error });
-//   }
-// };
-
-// export const getAllCars = async (req, res) => {
-//   try {
-//     const cars = (await Car.find({}).lean()).reverse();
-
-//     const carsWithImages = cars.map((car) => {
-//       let carImage = null;
-
-//       if (car.carImage && car.carImage.data) {
-//         carImage = `data:${
-//           car.carImage.contentType
-//         };base64,${car.carImage.data.toString("base64")}`;
-//       }
-
-//       return {
-//         ...car,
-//         carImage,
-//       };
-//     });
-
-//     res.status(200).json({ success: true, cars: carsWithImages });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "Error in getting all cars", error });
-//   }
-// };
-
-// working function
-// export const getAllCars = async (req, res) => {
-//   try {
-//     const cars = await Car.find({}).lean();
-
-//     const carsWithImages = cars
-//       .map(({ carImage, ...car }) => ({
-//         ...car,
-//         carImage: carImage?.data
-//           ? `data:${carImage.contentType};base64,${carImage.data.toString(
-//               "base64"
-//             )}`
-//           : null,
-//       }))
-//       .reverse(); // reverse after mapping
-
-//     res.status(200).json({ success: true, cars: carsWithImages });
-//   } catch (error) {
-//     console.error("Error getting all cars:", error.message);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
 
 export const getAllCars = async (req, res) => {
   try {

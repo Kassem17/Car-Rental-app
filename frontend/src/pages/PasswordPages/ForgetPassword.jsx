@@ -1,6 +1,24 @@
-import React from "react";
+import { useContext, useState } from "react";
+import axios from "axios";
+import { AppContext } from "../../context/AppContext";
 
-const ForgetPassword = () => {
+function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const { backendUrl } = useContext(AppContext);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(backendUrl + "/api/auth/forgot-password", {
+        email,
+      });
+      setMessage(res.data.message);
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Something went wrong");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -14,7 +32,7 @@ const ForgetPassword = () => {
 
         {/* Form */}
         <div className="p-8">
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="email"
@@ -23,6 +41,8 @@ const ForgetPassword = () => {
                 Email Address
               </label>
               <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 id="email"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-200"
@@ -46,6 +66,7 @@ const ForgetPassword = () => {
               </svg>
               Send Reset Link
             </button>
+            <p>{message}</p>
           </form>
 
           <div className="mt-6 text-center">
@@ -82,6 +103,6 @@ const ForgetPassword = () => {
       </div>
     </div>
   );
-};
+}
 
-export default ForgetPassword;
+export default ForgotPassword;

@@ -226,7 +226,7 @@ export const getBookingByCarId = async (req, res) => {
     res.status(200).json({ success: true, carBooking });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error in update Booking", error });
+    res.status(500).json({ message: "Error in getting Booking", error });
   }
 };
 
@@ -259,14 +259,13 @@ export const getBookingById = async (req, res) => {
   }
 };
 
-
 export const updateBookingStatus = async (req, res) => {
   const { bookingId } = req.params;
   const { status } = req.body; // Status is passed in the request body
 
   try {
     const booking = await Booking.findById(bookingId);
-    
+
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }
@@ -279,5 +278,114 @@ export const updateBookingStatus = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed to update booking status" });
+  }
+};
+
+export const getMultipleBooking = async (req, res) => {
+  try {
+    const { bookingIds } = req.body;
+
+    if (!bookingIds || !Array.isArray(bookingIds)) {
+      return res.status(400).json({ message: "Invalid booking IDs provided" });
+    }
+
+    const bookings = await Booking.find({
+      _id: { $in: bookingIds },
+    }).populate("car", "brand model"); // Populate car details if needed
+
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({ message: "Error getMultipleBooking" });
+  }
+};
+
+export const unAvailableCars = async (rea, res) => {
+  try {
+    const now = new Date();
+
+    const bookings = await Booking.find({
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      status: "confirmed",
+    }).select("car startDate endDate status");
+    const unavailableCarIds = bookings.map((b) => b.car.toString());
+    res.status(200).json({
+      success: true,
+      message: "car is unavailable",
+      unavailableCarIds,
+    });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({ message: "Error unAvailableCars " });
+  }
+};
+
+export const deleteCancelledBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Find the booking first
+      const booking = await Booking.findById(bookingId).session(session);
+
+      if (!booking) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Booking not found" });
+      }
+
+      if (booking.status !== "cancelled") {
+        return res.status(400).json({
+          success: false,
+          message: "Only cancelled bookings can be deleted",
+        });
+      }
+
+      // Delete the booking
+      await Booking.deleteOne({ _id: bookingId }).session(session);
+
+      // Update the car if it exists
+      if (booking.car) {
+        await Car.findByIdAndUpdate(
+          booking.car,
+          {
+            $set: { available: true },
+            $unset: { bookingId: "" },
+          },
+          { session }
+        );
+      }
+
+      // Update the user if it exists
+      if (booking.user) {
+        await User.findByIdAndUpdate(
+          booking.user,
+          { $pull: { bookings: bookingId } },
+          { session }
+        );
+      }
+
+      await session.commitTransaction();
+      res.status(200).json({
+        success: true,
+        message: "Cancelled booking deleted successfully",
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  } catch (error) {
+    console.error("Error deleting cancelled booking:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete cancelled booking",
+      error: error.message,
+    });
   }
 };

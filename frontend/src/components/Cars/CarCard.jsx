@@ -1,8 +1,21 @@
-import React from "react";
+import React, { useContext } from "react";
 import { motion } from "framer-motion";
-import { FuelIcon, GaugeIcon, HeartIcon, StarIcon, UsersIcon } from "lucide-react";
+import {
+  FuelIcon,
+  GaugeIcon,
+  HeartIcon,
+  StarIcon,
+  UsersIcon,
+} from "lucide-react";
+import { AppContext } from "../../context/AppContext";
 
 const CarCard = ({ car }) => {
+  const { unavailableCar } = useContext(AppContext);
+
+  const isCarAvailable = () => {
+    return !unavailableCar.includes(car._id);
+  };
+
   return (
     <motion.div
       className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group"
@@ -24,17 +37,17 @@ const CarCard = ({ car }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
 
         {/* Favorite button */}
-        <button
+        {/* <button
           className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-all"
           aria-label="Add to favorites"
         >
           <HeartIcon className="w-5 h-5 text-gray-400 hover:text-red-500" />
-        </button>
+        </button> */}
 
         {/* Availability badge */}
         <div
           className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-            car.available
+            isCarAvailable()
               ? "bg-green-500/90 text-white"
               : "bg-red-500/90 text-white"
           }`}

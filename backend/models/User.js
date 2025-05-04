@@ -36,6 +36,9 @@ const userSchema = new mongoose.Schema(
         ref: "Booking",
       },
     ],
+    // Update in userSchema
+    resetToken: String,
+    resetTokenExpiry: Date,
   },
   { timestamps: true }
 );

@@ -1,80 +1,134 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { AppContext } from "../../context/AppContext";
 import useGetUserById from "../../hooks/useGetUserById";
 import useGetBookingForUser from "../../hooks/useGetBookingForUser";
 import useCancelBookingById from "../../hooks/useCancelBooking";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRightIcon } from "lucide-react";
+import axios from "axios";
+
+const statusStyles = {
+  paid: "bg-green-100 text-green-800",
+  pending: "bg-amber-100 text-amber-800",
+  cancelled: "bg-gray-100 text-gray-800",
+  confirmed: "bg-blue-100 text-blue-800",
+};
 
 const MyBookings = () => {
-  const { userById, bookingForUser, token } = useContext(AppContext);
+  const { userById, bookingForUser, token, backendUrl } =
+    useContext(AppContext);
   const { getUserById } = useGetUserById();
   const { getBookingByUser } = useGetBookingForUser();
   const { cancelBooking } = useCancelBookingById();
+  // const { deleteBooking } = useDeleteBookings();
   const navigate = useNavigate();
 
   useEffect(() => {
-    getUserById(token);
-    getBookingByUser(token);
+    if (token) {
+      getUserById(token);
+      getBookingByUser(token);
+    }
   }, [token]);
 
   const handleCancelBooking = async (id) => {
     await cancelBooking({ bookingId: id });
   };
 
-  // Sorting bookings: pending > completed > cancelled
-  const sortedBookings = [...bookingForUser].sort((a, b) => {
-    const statusOrder = { pending: 0, completed: 1, cancelled: 2 };
-    return statusOrder[a.status] - statusOrder[b.status];
-  });
+  // const handleDeleteCancelledBooking = async (id) => {
+  //   await deleteBooking({ bookingId: id });
+  // };
+
+  const sortedBookings = useMemo(() => {
+    const statusOrder = { pending: 0, confirmed: 1, paid: 2, cancelled: 3 };
+    return [...bookingForUser].sort(
+      (a, b) => statusOrder[a.status] - statusOrder[b.status]
+    );
+  }, [bookingForUser]);
+
+  const handleCheckout = async ({ bookingId, amount }) => {
+    try {
+      const res = await axios.post(
+        backendUrl + "/api/payment/create-checkout-session",
+        {
+          bookingId,
+          amount,
+          currency: "usd",
+        }
+      );
+      window.location.href = res.data.url; // Redirect to Stripe Checkout page
+    } catch (err) {
+      console.error("Error during checkout", err);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-indigo-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">
               My Bookings
             </h1>
-            <p className="text-indigo-700">
-              View and manage all your reservations
-            </p>
+            <p className="text-gray-500">Manage your reservations</p>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-md mt-4 md:mt-0">
+
+          <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 w-full lg:w-auto">
             <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-indigo-700 font-bold text-xl">
-                  {userById.name?.charAt(0)}
-                </span>
+              <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
+                {userById.avatar ? (
+                  <img
+                    className="rounded-full h-full w-full object-cover"
+                    src={userById.avatar}
+                    alt={userById.name}
+                    loading="lazy"
+                  />
+                ) : (
+                  <span>{userById.name?.charAt(0)}</span>
+                )}
               </div>
               <div>
-                <h2 className="font-semibold text-gray-800">{userById.name}</h2>
-                <p className="text-sm text-gray-600">{userById.email}</p>
+                <h2 className="font-medium text-gray-800 text-sm">
+                  {userById.name}
+                </h2>
+                <p className="text-xs text-gray-500">{userById.email}</p>
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Bookings List */}
-        <div className="space-y-6">
+        <AnimatePresence>
           {sortedBookings.length > 0 ? (
-            sortedBookings.map((booking) => {
-              const isCancelled = booking.status === "cancelled";
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid gap-4"
+            >
+              {sortedBookings.map((booking) => {
+                const isConfirmed = booking.status === "confirmed";
+                const isCancelled = booking.status === "cancelled";
+                const isPaid = booking.status === "paid";
+                const isPending = booking.status === "pending";
 
-              return (
-                <div
-                  key={booking._id}
-                  className={`bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg ${
-                    isCancelled ? "opacity-60" : ""
-                  }`}
-                >
-                  <div className="p-6 md:flex md:items-center md:justify-between ">
-                    <div className="mb-4 md:mb-0">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-indigo-100 p-3 rounded-lg">
+                return (
+                  <motion.article
+                    key={booking._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`bg-white rounded-xl shadow-xs overflow-hidden border border-gray-100 ${
+                      isCancelled ? "opacity-75" : "hover:shadow-sm"
+                    }`}
+                  >
+                    <div className="p-4 md:flex md:items-center md:justify-between gap-4">
+                      <div className="flex items-start space-x-3 mb-3 md:mb-0">
+                        <div className="bg-blue-50 p-2.5 rounded-lg flex-shrink-0">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-8 w-8 text-indigo-600"
+                            className="h-5 w-5 text-blue-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -82,123 +136,149 @@ const MyBookings = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800">
-                            {new Date(booking.startDate).toLocaleDateString()} -{" "}
-                            {new Date(booking.endDate).toLocaleDateString()}
+                          <h3 className="font-medium text-gray-900">
+                            {new Date(booking.startDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}{" "}
+                            -{" "}
+                            {new Date(booking.endDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              }
+                            )}
                           </h3>
-                          <p className="text-gray-600">
-                            Booking ID: {booking._id.slice(-6).toUpperCase()}
+                          <p className="text-gray-500 text-xs mt-0.5">
+                            ID: {booking._id.slice(-6).toUpperCase()}
                           </p>
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                statusStyles[booking.status]
+                              }`}
+                            >
+                              {booking.status.charAt(0).toUpperCase() +
+                                booking.status.slice(1)}
+                            </span>
+                            {!isCancelled && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                ${booking.totalAmount}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        {isPaid && !isCancelled && (
+                          <button
+                            onClick={() =>
+                              navigate(`/print-voucher/${booking._id}`)
+                            }
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors"
+                          >
+                            Print Voucher
+                          </button>
+                        )}
+
+                        {isConfirmed && (
+                          <button
+                            onClick={() =>
+                              handleCheckout({
+                                bookingId: booking._id,
+                                amount: booking.totalAmount,
+                              })
+                            }
+                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                          >
+                            Pay Now
+                          </button>
+                        )}
+
+                        {!isCancelled && !isPaid && (
+                          <button
+                            onClick={() => handleCancelBooking(booking._id)}
+                            className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {/* {isCancelled && (
+                          <button
+                            onClick={() =>
+                              handleDeleteCancelledBooking(booking._id)
+                            }
+                            className="px-3 py-1.5 bg-red-500 border border-gray-200 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )} */}
+                      </div>
                     </div>
-
-                    <div className="flex flex-col items-end">
-                      <span
-                        className={`text-2xl font-bold text-indigo-700 mb-1 ${
-                          isCancelled ? "line-through" : ""
-                        }`}
-                      >
-                        ${booking.totalAmount}
-                      </span>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          booking.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : booking.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {booking.status.charAt(0).toUpperCase() +
-                          booking.status.slice(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 px-6 py-3 flex justify-end">
-                    {/* pay button */}
-                    {!isCancelled && (
-                      <button
-                        
-                        onClick={() => console.log("Pay online")}
-                        className={`font-medium text-sm ${
-                          booking.status === "completed" && !isCancelled
-                            ? " cursor-not-allowed text-green-600"
-                            : "text-indigo-600 hover:text-indigo-800"
-                        }`}
-                        disabled={booking.status === "completed"}
-                      >
-                        {booking.status === "completed" && !isCancelled
-                          ? "Paid"
-                          : `Pay Online $${booking.totalAmount}`}
-                      </button>
-                    )}
-
-                    {booking.status === "completed" && !isCancelled && (
-                      <button
-                        onClick={() =>
-                          navigate(`/print-voucher/${booking._id}`)
-                        }
-                        className="ml-4 font-medium text-sm text-indigo-600 hover:text-indigo-800"
-                      >
-                        print Voucher
-                      </button>
-                    )}
-
-                    {/* cancel button */}
-                    {booking.status !== "completed" && (
-                      <button
-                        onClick={() => handleCancelBooking(booking._id)}
-                        className={`ml-4 font-medium text-sm ${
-                          isCancelled
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-gray-600 hover:text-gray-800"
-                        }`}
-                        disabled={isCancelled}
-                      >
-                        {isCancelled ? "Cancelled" : "Cancel"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })
+                  </motion.article>
+                );
+              })}
+            </motion.div>
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-8 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-16 w-16 mx-auto text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h3 className="text-xl font-medium text-gray-700 mt-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl shadow-xs p-6 text-center max-w-md mx-auto border border-gray-100"
+            >
+              <div className="mx-auto h-16 w-16 text-gray-300 mb-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
                 No bookings found
               </h3>
-              <p className="text-gray-500 mt-2">
-                You don't have any bookings yet. Start exploring to make your
-                first reservation!
+              <p className="text-gray-500 mb-4 text-sm">
+                Start exploring our properties to book your stay.
               </p>
-              <button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium">
+              <button
+                onClick={() => navigate("/properties")}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors text-sm"
+              >
                 Browse Properties
               </button>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+      </div>
+      <div className="text-center mt-20">
+        <motion.button
+          onClick={() => navigate("/all-Cars")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.97 }}
+          className="relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-full shadow-lg transition-all group"
+        >
+          Reserve
+          <ArrowRightIcon className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </motion.button>
       </div>
     </div>
   );
