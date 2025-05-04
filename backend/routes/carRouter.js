@@ -21,7 +21,7 @@ carRouter.post("/add-car", protectRoute, addCar);
 
 carRouter.put("/update-car/:id", updateCar);
 
-carRouter.post("/delete-car", deleteCar);
+carRouter.delete("/delete-car", deleteCar);
 carRouter.post("/change-status", changeStatus);
 
 export default carRouter;
